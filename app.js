@@ -23,7 +23,7 @@ const GREET = {
 function updateGreeting() {
   $("homeSay").textContent = settings.apiKey
     ? (GREET[settings.personality] || GREET.cheeky)(robotName())
-    : "Привет! Сначала добавь ключ OpenAI в «Настройках» ⚙️";
+    : "Hi! First add your OpenAI key in Settings ⚙️";
 }
 
 // ---------- navigation ----------
@@ -55,13 +55,13 @@ $("saveSettings").onclick = () => {
   FIELDS.forEach((k) => (settings[k] = $(k).value.trim()));
   if (!settings.robotName) settings.robotName = "Bolt";
   store.set("settings", settings);
-  $("savedHint").textContent = "Сохранено ✓";
+  $("savedHint").textContent = "Saved ✓";
   setTimeout(() => ($("savedHint").textContent = ""), 1500);
   updateGreeting();
 };
 
 // ---------- mistakes log ----------
-const TYPE_RU = { grammar: "грамматика", vocabulary: "лексика", phrasing: "формулировка", pronunciation: "произношение" };
+const TYPE_RU = { grammar: "grammar", vocabulary: "vocabulary", phrasing: "phrasing", pronunciation: "pronunciation" };
 function fixCard(m) {
   const d = document.createElement("div");
   d.className = "fix";
@@ -76,17 +76,17 @@ function renderMistakes() {
   const all = store.get("mistakes", []);
   const list = $("mistakesList");
   list.innerHTML = "";
-  $("mistakesMeta").textContent = all.length ? `Всего: ${all.length}. Потренировать их можно темой «🔁 Разбор моих ошибок».` : "";
-  if (!all.length) { list.innerHTML = `<div class="empty">Пока пусто. Поговори — и здесь появятся твои ошибки с исправлениями.</div>`; return; }
+  $("mistakesMeta").textContent = all.length ? `Total: ${all.length}. Practise them with "🔁 Review my mistakes".` : "";
+  if (!all.length) { list.innerHTML = `<div class="empty">Nothing here yet. Talk to the robot and your mistakes will show up here with corrections.</div>`; return; }
   let lastDay = "";
   all.slice().reverse().forEach((m) => {
-    const day = new Date(m.date).toLocaleDateString("ru-RU", { day: "numeric", month: "long" });
+    const day = new Date(m.date).toLocaleDateString("en-GB", { day: "numeric", month: "long" });
     if (day !== lastDay) { const h = document.createElement("div"); h.className = "day"; h.textContent = day; list.appendChild(h); lastDay = day; }
     list.appendChild(fixCard(m));
   });
 }
 $("clearMistakes").onclick = () => {
-  if (confirm("Удалить все сохранённые ошибки?")) { store.set("mistakes", []); renderMistakes(); }
+  if (confirm("Delete all saved mistakes?")) { store.set("mistakes", []); renderMistakes(); }
 };
 function recentUniqueMistakes(n) {
   const seen = new Set(), out = [];
@@ -123,7 +123,7 @@ function bubble(id, role, text, pending) {
 
 function currentTopic() {
   const custom = $("customTopic").value.trim();
-  if (custom) return { prompt: custom + " (the learner may have written this in Russian — use it in English)", label: custom };
+  if (custom) return { prompt: custom + " (if it is not in English, translate it)", label: custom };
   const t = TOPICS.find((x) => x.id === selectedTopic) || TOPICS[0];
   return { prompt: t.prompt, label: t.label, review: !!t.review };
 }
@@ -154,7 +154,7 @@ async function startCall() {
   const topic = currentTopic();
   topicLabel = topic.label;
   if (topic.review && !store.get("mistakes", []).length) {
-    alert("Журнал ошибок пока пуст — сначала просто поговори с роботом.");
+    alert("Your mistakes list is empty — have a normal chat with the robot first.");
     return;
   }
   const instructions = buildInstructions({
@@ -171,7 +171,7 @@ async function startCall() {
   $("callTimer").textContent = "00:00";
   document.body.classList.add("in-call");
   show("call");
-  setStatus("Подключаюсь…"); callRobot.setState("thinking");
+  setStatus("Connecting…"); callRobot.setState("thinking");
 
   session = new RealtimeSession({
     apiKey: settings.apiKey,
@@ -188,7 +188,7 @@ async function startCall() {
     await session.connect();
   } catch (e) {
     endCall(false);
-    alert(e && e.name === "NotAllowedError" ? "Нужен доступ к микрофону: Настройки iPhone → Safari → Микрофон." : (e.message || String(e)));
+    alert(e && e.name === "NotAllowedError" ? "Microphone access is needed: iPhone Settings → Safari → Microphone." : (e.message || String(e)));
     return;
   }
 
@@ -200,20 +200,20 @@ async function startCall() {
     const s = Math.floor((Date.now() - startedAt) / 1000);
     $("callTimer").textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
   }, 500);
-  setStatus(`${robotName()} думает…`);
+  setStatus(`${robotName()} is thinking…`);
   session.send({ type: "response.create" });
 }
 
 function handleEvent(ev) {
   switch (ev.type) {
     case "input_audio_buffer.speech_started":
-      callRobot.setState("listening"); setStatus("Слушаю…"); break;
+      callRobot.setState("listening"); setStatus("Listening…"); break;
     case "input_audio_buffer.speech_stopped":
-      callRobot.setState("thinking"); setStatus(`${robotName()} думает…`); break;
+      callRobot.setState("thinking"); setStatus(`${robotName()} is thinking…`); break;
     case "input_audio_buffer.committed":
       bubble(ev.item_id, "user", "…", true); break;
     case "conversation.item.input_audio_transcription.completed":
-      bubble(ev.item_id, "user", (ev.transcript || "").trim() || "(не расслышал)"); break;
+      bubble(ev.item_id, "user", (ev.transcript || "").trim() || "(didn't catch that)"); break;
 
     case "response.output_audio_transcript.delta":
     case "response.audio_transcript.delta": {
@@ -223,21 +223,21 @@ function handleEvent(ev) {
     }
     case "output_audio_buffer.started":
       speaking = true; silentFrames = 0;
-      callRobot.setState("speaking"); setStatus(`Говорит ${robotName()}`); break;
+      callRobot.setState("speaking"); setStatus(`${robotName()} is talking`); break;
     case "output_audio_buffer.stopped":
     case "output_audio_buffer.cleared":
       speaking = false; callRobot.setLevel(0);
-      callRobot.setState("listening"); setStatus(muted ? "Микрофон выключен" : "Твоя очередь"); break;
+      callRobot.setState("listening"); setStatus(muted ? "Mic is off" : "Your turn"); break;
 
     case "response.done":
       handleResponseDone(ev.response); break;
 
     case "error":
       console.warn("realtime error", ev.error);
-      if (ev.error && ev.error.message && !/no active response/i.test(ev.error.message)) setStatus("Ошибка: " + ev.error.message);
+      if (ev.error && ev.error.message && !/no active response/i.test(ev.error.message)) setStatus("Error: " + ev.error.message);
       break;
     case "_connection_lost":
-      setStatus("Связь потеряна. Проверь интернет/VPN."); callRobot.setState("idle"); break;
+      setStatus("Connection lost. Check your internet/VPN."); callRobot.setState("idle"); break;
   }
 }
 
@@ -268,7 +268,7 @@ $("muteBtn").onclick = () => {
   session && session.setMuted(muted);
   $("muteBtn").classList.toggle("off", muted);
   $("muteBtn").textContent = muted ? "🔇" : "🎙️";
-  setStatus(muted ? "Микрофон выключен" : "Твоя очередь");
+  setStatus(muted ? "Mic is off" : "Your turn");
 };
 
 $("topicBtn").onclick = () => {
@@ -293,10 +293,10 @@ function endCall(showSummary) {
   if (!showSummary) { show("home"); return; }
 
   const mins = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
-  $("summaryMeta").textContent = `${mins} мин · исправлений: ${sessionMistakes.length}`;
+  $("summaryMeta").textContent = `${mins} min · corrections: ${sessionMistakes.length}`;
   const list = $("summaryList");
   list.innerHTML = "";
-  if (!sessionMistakes.length) list.innerHTML = `<div class="empty">Ошибок не записано — отлично! 🎉</div>`;
+  if (!sessionMistakes.length) list.innerHTML = `<div class="empty">No mistakes logged — great job! 🎉</div>`;
   sessionMistakes.forEach((m) => list.appendChild(fixCard(m)));
   show("summary");
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.remove("active"));

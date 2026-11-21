@@ -95,10 +95,10 @@ class RealtimeSession {
 function explainError(status, text) {
   let msg = text;
   try { msg = JSON.parse(text).error.message; } catch (_) {}
-  if (status === 401) return "Неверный API ключ. Проверь его в настройках.";
-  if (status === 403 && /country|region|territory/i.test(msg)) return "OpenAI недоступен из твоей страны — включи VPN.";
-  if (status === 429) return "Лимит или нет денег на балансе OpenAI: " + msg;
-  return `Ошибка ${status}: ${msg}`;
+  if (status === 401) return "Invalid API key. Check it in Settings.";
+  if (status === 403 && /country|region|territory/i.test(msg)) return "OpenAI is not available in your region — turn on a VPN.";
+  if (status === 429) return "Rate limit or no credit on your OpenAI balance: " + msg;
+  return `Error ${status}: ${msg}`;
 }
 
 window.RealtimeSession = RealtimeSession;
