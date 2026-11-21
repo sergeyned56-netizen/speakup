@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SpeakUp" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <title>SpeakUp</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main id="app">
+
+    <!-- HOME -->
+    <section class="screen active" id="screen-home">
+      <div class="robot small" id="homeRobot"></div>
+      <div class="bubble-say" id="homeSay">Hi! I'm Bolt. Let's talk 🤖</div>
+
+      <div class="card">
+        <div class="label">О чём поговорим?</div>
+        <div class="chips" id="topicChips"></div>
+        <input id="customTopic" class="input" placeholder="Своя тема (по-русски или по-английски)" />
+      </div>
+
+      <button class="btn primary big" id="startBtn">
+        <span class="mic-ico">●</span> Начать разговор
+      </button>
+      <p class="hint" id="homeHint"></p>
+      <div class="card install" id="installHint">
+        <div class="label">Установи как приложение</div>
+        <div>В Safari нажми <b>Поделиться</b> (квадрат со стрелкой) → <b>На экран «Домой»</b>. Иконка SpeakUp появится рядом с другими приложениями.</div>
+      </div>
+    </section>
+
+    <!-- CALL -->
+    <section class="screen" id="screen-call">
+      <div class="call-head">
+        <div class="status" id="callStatus">Подключаюсь…</div>
+        <div class="timer" id="callTimer">00:00</div>
+      </div>
+
+      <div class="robot robot-wrap" id="callRobot"></div>
+
+      <div class="transcript" id="transcript"></div>
+
+      <div class="call-controls">
+        <button class="round" id="muteBtn" title="Микрофон">🎙️</button>
+        <button class="round danger" id="endBtn" title="Закончить">✕</button>
+        <button class="round" id="topicBtn" title="Другая тема">🔀</button>
+      </div>
+      <div class="ctrl-labels"><span>Микрофон</span><span>Закончить</span><span>Тема</span></div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section class="screen" id="screen-summary">
+      <header class="top"><h1>Итог разговора</h1><p class="sub" id="summaryMeta"></p></header>
+      <div id="summaryList" class="list"></div>
+      <button class="btn primary" id="summaryDone">Готово</button>
+    </section>
+
+    <!-- MISTAKES -->
+    <section class="screen" id="screen-mistakes">
+      <header class="top"><h1>Мои ошибки</h1><p class="sub" id="mistakesMeta"></p></header>
+      <div id="mistakesList" class="list"></div>
+      <button class="btn ghost" id="clearMistakes">Очистить журнал</button>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="screen-settings">
+      <header class="top"><h1>Настройки</h1></header>
+      <div class="card">
+        <label class="label" for="apiKey">OpenAI API ключ</label>
+        <input id="apiKey" class="input" type="password" placeholder="sk-..." autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" />
+        <p class="hint">Хранится только на этом телефоне. Из России нужен включённый VPN.</p>
+      </div>
+      <div class="card">
+        <label class="label" for="robotName">Имя робота</label>
+        <input id="robotName" class="input" placeholder="Bolt" />
+
+        <label class="label" for="personality">Характер</label>
+        <select id="personality" class="input">
+          <option value="cheeky">😏 Дерзкий и смешной — подкалывает за ошибки</option>
+          <option value="kind">🥰 Добрый и милый — хвалит и поддерживает</option>
+          <option value="coach">💪 Строгий тренер — минимум болтовни, максимум практики</option>
+        </select>
+
+        <label class="label" for="level">Мой уровень</label>
+        <select id="level" class="input">
+          <option value="A2">A2 — простые фразы</option>
+          <option value="B1">B1 — средний</option>
+          <option value="B2">B2 — выше среднего</option>
+          <option value="C1">C1 — продвинутый</option>
+        </select>
+
+        <label class="label" for="strictness">Как строго исправлять</label>
+        <select id="strictness" class="input">
+          <option value="gentle">Мягко — только серьёзные ошибки</option>
+          <option value="normal">Нормально</option>
+          <option value="strict">Строго — каждую ошибку + повторить фразу</option>
+        </select>
+
+        <label class="label" for="voice">Голос собеседника</label>
+        <select id="voice" class="input">
+          <option value="marin">Marin</option>
+          <option value="cedar">Cedar</option>
+          <option value="alloy">Alloy</option>
+          <option value="ash">Ash</option>
+          <option value="coral">Coral</option>
+          <option value="sage">Sage</option>
+          <option value="verse">Verse</option>
+        </select>
+
+        <label class="label" for="accent">Акцент</label>
+        <select id="accent" class="input">
+          <option value="American">Американский</option>
+          <option value="British">Британский</option>
+        </select>
+
+        <label class="label" for="model">Модель</label>
+        <select id="model" class="input">
+          <option value="gpt-realtime">gpt-realtime — лучше качество</option>
+          <option value="gpt-realtime-mini">gpt-realtime-mini — дешевле</option>
+        </select>
+        <input id="modelCustom" class="input" placeholder="или своя модель (необязательно)" />
+      </div>
+      <button class="btn primary" id="saveSettings">Сохранить</button>
+      <p class="hint center" id="savedHint"></p>
+    </section>
+
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <button data-screen="home" class="active">💬<span>Разговор</span></button>
+    <button data-screen="mistakes">📒<span>Ошибки</span></button>
+    <button data-screen="settings">⚙️<span>Настройки</span></button>
+  </nav>
+
+  <audio id="remoteAudio" autoplay playsinline></audio>
+
+  <script src="robot.js"></script>
+  <script src="topics.js"></script>
+  <script src="tutor.js"></script>
+  <script src="realtime.js"></script>
+  <script src="app.js"></script>
+  <script>if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});</script>
+</body>
+</html>
