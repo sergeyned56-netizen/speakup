@@ -1,6 +1,6 @@
 // Кэш оболочки приложения, чтобы оно открывалось быстро. Запросы к OpenAI не кэшируются.
-const CACHE = "speakup-v4";
-const FILES = ["./", "index.html", "style.css", "app.js", "tutor.js", "topics.js", "realtime.js", "robot.js", "manifest.webmanifest", "icons/apple-touch-icon.png"];
+const CACHE = "speakup-v6";
+const FILES = ["./", "index.html", "style.css", "app.js", "tutor.js", "topics.js", "realtime.js", "robot.js", "store.js", "report.js", "manifest.webmanifest", "icons/apple-touch-icon.png"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))));
