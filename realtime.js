@@ -16,6 +16,9 @@ class RealtimeSession {
         instructions: this.instructions,
         tools: this.tools,
         tool_choice: "auto",
+        max_output_tokens: 1500,
+        // keep the context small: old turns are dropped instead of being re-read (and paid for) every turn
+        truncation: { type: "retention_ratio", retention_ratio: 0.7, token_limits: { post_instructions: 9000 } },
         audio: {
           input: {
             transcription: { model: "gpt-4o-mini-transcribe", language: "en" },
@@ -101,4 +104,23 @@ function explainError(status, text) {
   return `Error ${status}: ${msg}`;
 }
 
+// $ per 1M tokens: text [in, cached, out], audio [in, cached, out]
+const RT_PRICES = {
+  "gpt-realtime-mini": { text: [0.6, 0.06, 2.4], audio: [10, 0.3, 20] },
+  "gpt-realtime": { text: [4, 0.4, 16], audio: [32, 0.4, 64] },
+};
+function usageCost(model, u) {
+  if (!u) return 0;
+  const p = RT_PRICES[model] || (/mini/.test(model) ? RT_PRICES["gpt-realtime-mini"] : RT_PRICES["gpt-realtime"]);
+  const i = u.input_token_details || {}, o = u.output_token_details || {};
+  const c = i.cached_tokens_details || {};
+  const tIn = i.text_tokens || 0, aIn = i.audio_tokens || 0;
+  const tC = c.text_tokens || 0, aC = c.audio_tokens || 0;
+  return ((tIn - tC) * p.text[0] + tC * p.text[1] + (o.text_tokens || 0) * p.text[2] +
+          (aIn - aC) * p.audio[0] + aC * p.audio[1] + (o.audio_tokens || 0) * p.audio[2]) / 1e6;
+}
+const TRANSCRIBE_PER_MIN = 0.003; // gpt-4o-mini-transcribe
+
 window.RealtimeSession = RealtimeSession;
+window.usageCost = usageCost;
+window.TRANSCRIBE_PER_MIN = TRANSCRIBE_PER_MIN;
